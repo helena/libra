@@ -19,7 +19,7 @@ import spire._, spire.algebra._, spire.math._, spire.implicits._
   * scala> res0: Quantity[Double, Term[Length, Metre, Fraction[1, 1]] :: HNil] = Quantity(5.5)
   * }}}
   */
-case class Quantity[A, D <: HList](val value: A) extends AnyVal {
+case class Quantity[@sp(Short, Int, Long, Float, Double) A, D <: HList](val value: A) {
 
  /**
    * Adds another quantity using the spire AdditiveSemigroup.
