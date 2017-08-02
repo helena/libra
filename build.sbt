@@ -1,9 +1,13 @@
+import xerial.sbt.Sonatype.autoImport.sonatypeProfileName
+import ReleaseTransformations._
+
 lazy val buildSettings = Seq(
-  organization := "com.ithaca",
+  organization := "com.github.to-ithaca",
   scalaOrganization := "org.typelevel",
   licenses += ("Apache-2.0", url("https://www.apache.org/licenses/LICENSE-2.0.html")),
-  scalaVersion := "2.12.1",
-  crossScalaVersions := Seq("2.11.8", "2.12.1"),
+  homepage := Some(url("https://to-ithaca.github.io/libra/")),
+  crossScalaVersions := "2.12.1" :: "2.11.8" :: Nil,
+  scalaVersion := crossScalaVersions.value.head,
   name         := "libra"
 )
 
@@ -40,11 +44,6 @@ lazy val siteSettings = Seq(
   autoAPIMappings := true
 )
 
-lazy val publishSettings = Seq(
-  releaseCrossBuild := true,
-  bintrayOrganization := Some("to-ithaca")
-)
-
 lazy val commonSettings = Seq(
     resolvers ++= commonResolvers,
     scalacOptions ++= commonScalacOptions,
@@ -57,9 +56,36 @@ lazy val commonSettings = Seq(
   doctestTestFramework := DoctestTestFramework.ScalaTest
 ) ++ buildSettings
 
+val publishSettings = Seq(
+  releaseCrossBuild := true,
+  releaseIgnoreUntrackedFiles := true,
+  sonatypeProfileName := "com.github.to-ithaca",
+  developers += Developer("zainab-ali", "Zainab Ali", "", url("http://github.com/zainab-ali")),
+  licenses := Seq("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")),
+  homepage := Some(url("http://to-ithaca.github.io/libra/")),
+  scmInfo := Some(ScmInfo(url("https://github.com/to-ithaca/libra"),
+    "git@github.com:to-ithaca/libra.git")),
+  credentials ++= (for {
+    username <- Option(System.getenv().get("SONATYPE_USERNAME"))
+    password <- Option(System.getenv().get("SONATYPE_PASSWORD"))
+  } yield Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", username, password)).toSeq,
+  releaseProcess := Seq[ReleaseStep](
+    checkSnapshotDependencies,
+    inquireVersions,
+    runClean,
+    runTest,
+    setReleaseVersion,
+    commitReleaseVersion,
+    tagRelease,
+    ReleaseStep(action = Command.process("publishSigned", _), enableCrossBuild = true),
+    setNextVersion,
+    commitNextVersion,
+    ReleaseStep(action = Command.process("sonatypeReleaseAll", _), enableCrossBuild = true),
+    pushChanges)
+)
 
 lazy val root = (project in file("."))
   .settings(commonSettings)
-  .settings(siteSettings)
   .settings(publishSettings)
+  .settings(siteSettings)
   .enablePlugins(MicrositesPlugin)
